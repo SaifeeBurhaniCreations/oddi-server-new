@@ -1,4 +1,7 @@
 export class ApiError extends Error {
+    statusCode;
+    code;
+    details;
     constructor(message, statusCode = 500, code, details) {
         super(message);
         this.statusCode = statusCode;
@@ -24,29 +27,29 @@ function defaultProblemType(base, status) {
 }
 function buildBasicError(err, c, statusCode, includeStack) {
     const body = {
-        error: (err === null || err === void 0 ? void 0 : err.message) || 'Internal Server Error',
-        code: err === null || err === void 0 ? void 0 : err.code,
+        error: err?.message || 'Internal Server Error',
+        code: err?.code,
         requestId: getRequestId(c),
     };
-    if (err === null || err === void 0 ? void 0 : err.details)
+    if (err?.details)
         body.details = err.details;
-    if (includeStack && (err === null || err === void 0 ? void 0 : err.stack))
+    if (includeStack && err?.stack)
         body.stack = err.stack;
     return body;
 }
 function buildProblemDetails(err, c, statusCode, includeStack, typeBase) {
     const obj = {
         type: defaultProblemType(typeBase, statusCode),
-        title: (err === null || err === void 0 ? void 0 : err.message) || 'HTTP Error',
+        title: err?.message || 'HTTP Error',
         status: statusCode,
-        detail: (err === null || err === void 0 ? void 0 : err.details) ? (typeof err.details === 'string' ? err.details : undefined) : undefined,
+        detail: err?.details ? (typeof err.details === 'string' ? err.details : undefined) : undefined,
         instance: c.req.path,
         requestId: getRequestId(c),
-        code: err === null || err === void 0 ? void 0 : err.code,
+        code: err?.code,
     };
-    if ((err === null || err === void 0 ? void 0 : err.details) && typeof err.details !== 'string')
+    if (err?.details && typeof err.details !== 'string')
         obj.details = err.details;
-    if (includeStack && (err === null || err === void 0 ? void 0 : err.stack))
+    if (includeStack && err?.stack)
         obj.stack = err.stack;
     return obj;
 }
@@ -58,23 +61,21 @@ function buildProblemDetails(err, c, statusCode, includeStack, typeBase) {
  * - Uses ContentfulStatusCode so c.json() status typing is correct
  */
 export function errorHandler(config = {}) {
-    var _a;
-    const failSafe = (_a = config.failSafe) !== null && _a !== void 0 ? _a : true;
+    const failSafe = config.failSafe ?? true;
     return async (c, next) => {
-        var _a;
         try {
             await next();
         }
         catch (e) {
             const err = e;
-            const statusCode = safeContentfulStatus((_a = err === null || err === void 0 ? void 0 : err.statusCode) !== null && _a !== void 0 ? _a : 500);
+            const statusCode = safeContentfulStatus(err?.statusCode ?? 500);
             const meta = {
                 requestId: getRequestId(c),
                 method: c.req.method,
                 path: c.req.path,
                 statusCode,
-                code: err === null || err === void 0 ? void 0 : err.code,
-                details: err === null || err === void 0 ? void 0 : err.details,
+                code: err?.code,
+                details: err?.details,
                 userId: getUserId(c),
             };
             if (config.logger) {

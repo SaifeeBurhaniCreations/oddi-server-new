@@ -113,7 +113,6 @@ async function tokenBucketRefund(redis, key, capacity) {
     await redis.eval(TOKEN_BUCKET_REFUND_LUA, 1, `rl:${key}:tb`, capacity);
 }
 async function redisSlidingWindow(redis, key, windowMs, max) {
-    var _a, _b;
     const now = Date.now();
     const windowStart = now - windowMs;
     const rlKey = `rl:${key}:sw`;
@@ -124,10 +123,10 @@ async function redisSlidingWindow(redis, key, windowMs, max) {
     tx.zadd(rlKey, now, member);
     tx.expire(rlKey, Math.ceil(windowMs / 1000) * 2);
     const results = await tx.exec();
-    const count = Number((_b = (_a = results === null || results === void 0 ? void 0 : results[1]) === null || _a === void 0 ? void 0 : _a[1]) !== null && _b !== void 0 ? _b : 0);
+    const count = Number(results?.[1]?.[1] ?? 0);
     const used = count + 1;
     const remaining = Math.max(0, max - used);
-    const oldestScore = await redis.zrange(rlKey, 0, 0, 'BYSCORE', 'WITHSCORES').then(r => { var _a; return Number((_a = r === null || r === void 0 ? void 0 : r[1]) !== null && _a !== void 0 ? _a : now); });
+    const oldestScore = await redis.zrange(rlKey, 0, 0, 'BYSCORE', 'WITHSCORES').then(r => Number(r?.[1] ?? now));
     const resetDeltaSec = Math.max(0, Math.ceil((oldestScore + windowMs - now) / 1000));
     const allowed = used <= max;
     return { allowed, remaining: Math.max(0, remaining), resetDeltaSec, member, rlKey };
@@ -143,11 +142,9 @@ function shouldCount(status, cfg) {
     return true;
 }
 export function rateLimiter(cfg) {
-    var _a, _b;
-    const algorithm = (_a = cfg.algorithm) !== null && _a !== void 0 ? _a : 'fixed-window';
-    const keyGen = (_b = cfg.keyGenerator) !== null && _b !== void 0 ? _b : defaultKeyGen;
+    const algorithm = cfg.algorithm ?? 'fixed-window';
+    const keyGen = cfg.keyGenerator ?? defaultKeyGen;
     return async (c, next) => {
-        var _a, _b;
         const key = keyGen(c);
         const now = Date.now();
         let allowed = true;
@@ -197,10 +194,10 @@ export function rateLimiter(cfg) {
             }
             setRateHeaders(c, cfg.max, remaining, resetDeltaSec);
             if (!allowed) {
-                (_a = cfg.onLimitReached) === null || _a === void 0 ? void 0 : _a.call(cfg, c);
+                cfg.onLimitReached?.(c);
                 c.header('Retry-After', String(Math.max(1, resetDeltaSec)));
                 return c.json({
-                    error: (_b = cfg.message) !== null && _b !== void 0 ? _b : 'Too many requests',
+                    error: cfg.message ?? 'Too many requests',
                     retryAfter: resetDeltaSec,
                 }, 429);
             }
