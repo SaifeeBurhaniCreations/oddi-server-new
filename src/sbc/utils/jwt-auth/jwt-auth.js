@@ -1,6 +1,5 @@
 import { getCookie } from 'hono/cookie';
 import jwt from 'jsonwebtoken';
-// Helpers
 const SYM_SET = new Set(['HS256', 'HS384', 'HS512']);
 const isSym = (a) => SYM_SET.has(a);
 function assertKeyingConsistent(cfg) {
@@ -41,7 +40,7 @@ export function jwtAuth(rawConfig) {
     const headerName = rawConfig.headerName ?? 'Authorization';
     const scheme = rawConfig.scheme ?? 'Bearer';
     const algorithms = rawConfig.algorithms;
-    const [alg] = algorithms; // JwtAlg (guaranteed by NonEmptyArray)
+    const [alg] = algorithms; 
     const useSymmetric = isSym(alg);
     const verifyKey = useSymmetric
         ? rawConfig.secret
@@ -80,7 +79,7 @@ export function jwtAuth(rawConfig) {
 // Token generator
 export function generateToken(payload, cfg) {
     assertKeyingConsistent(cfg);
-    const [alg] = cfg.algorithms; // JwtAlg
+    const [alg] = cfg.algorithms; 
     const signKey = requireSignKey(cfg, alg);
     const signOpts = {
         algorithm: alg,
