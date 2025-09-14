@@ -4,7 +4,18 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "lint": "eslint . --ext .ts,.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "prisma:generate": "npx prisma generate",
+    "prisma:migrate": "npx prisma migrate dev",
+    "prisma:migrate:deploy": "npx prisma migrate deploy",
+    "prisma:studio": "npx prisma studio",
+    "prisma:seed": "tsx src/scripts/seed.ts",
+    "prisma:aliases": "tsx src/scripts/gen-delegates.ts",
+    "prisma:run": "npx prisma generate && tsx src/scripts/gen-delegates.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.2",
@@ -22,6 +33,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
+    "npm-run-all": "^4.1.5",
     "prisma": "^6.16.1",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"
