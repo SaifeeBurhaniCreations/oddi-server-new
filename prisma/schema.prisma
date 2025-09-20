@@ -26,3 +26,22 @@ enum TestStatus {
   PASSED
   FAILED
 }
+
+model OutboxMessage {
+  id             String   @id @default(uuid())
+  type           String
+  content        Json
+  occurredOnUtc  DateTime @default(now())
+  processedOnUtc DateTime?
+  error          String?
+}
+
+model InboxMessage {
+  id             String   @id @default(uuid())
+  eventId        String
+  type           String
+  content        Json
+  receivedOnUtc  DateTime @default(now())
+  processedOnUtc DateTime?
+  error          String?
+}

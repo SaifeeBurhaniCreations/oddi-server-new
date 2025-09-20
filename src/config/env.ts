@@ -9,6 +9,10 @@ export const EnvSchema = z.object({
     NODE_ENV: z.string().default('development'),
     DATABASE_URL: z.url(),
     JSON_DATABASE_URL: z.url(),
+    S3_BUCKET: z.string(),
+    AWS_REGION: z.string(),
+    AWS_ACCESS_KEY_ID: z.string(),
+    AWS_SECRET_ACCESS_KEY: z.string(),
 });
 
 export const env = EnvSchema.parse(process.env);
