@@ -1,4 +1,4 @@
-import { prisma } from "./prisma.js";
+import { prisma } from "./infra/prisma.js";
 
 // ---- ONLY EDIT THIS ----
 export const SEED_DATA = {

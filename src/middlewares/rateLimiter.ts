@@ -1,5 +1,5 @@
 import { rateLimiter } from '../sbc/utils/rate-limiter/rate-limiter.js';
-import { redis } from '../config/redis.js';
+import { redis } from '../config/infra/redis.js';
 
 export const apiRateLimiter = rateLimiter({
     windowMs: 15_000,

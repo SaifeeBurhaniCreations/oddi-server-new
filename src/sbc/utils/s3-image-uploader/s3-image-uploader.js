@@ -3,7 +3,7 @@ import { S3Client, PutObjectCommand, HeadObjectCommand, } from '@aws-sdk/client-
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
 import { Upload } from '@aws-sdk/lib-storage';
-const stream = require('stream');
+import { Readable } from 'stream';
 const defaultAllowed = ['image/jpeg', 'image/png', 'image/webp'];
 const isAllowed = (mime, allowed) => allowed.includes(mime);
 const sanitizeDir = (dir, fallback = "uploads") => (dir && typeof dir === "string" && dir.replace(/[^a-zA-Z0-9_\-/]/g, '').replace(/^\/+|\/+$/g, '')) || fallback;
@@ -39,7 +39,6 @@ export const createS3ImageUploader = (opts) => {
             const k = keyFor(folder);
             if (file.size > 5 * 1024 * 1024) {
                 const webStream = file.stream();
-                const { Readable } = await stream('stream');
                 const nodeStream = Readable.fromWeb(webStream);
                 const uploader = new Upload({
                     client: s3,

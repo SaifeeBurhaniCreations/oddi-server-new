@@ -1,6 +1,5 @@
 import { Queue, Worker, QueueEvents, Job } from 'bullmq';
-// Queue Manager
-export class JobQueueManager {
+export class jobQueueManager {
     config;
     queues = new Map();
     workers = new Map();
