@@ -15,17 +15,29 @@ app.post('/vendor/new', async (c) => {
 
 
 
-// await engine(eventActions["VendorCreated"], "all", {name: "abcd", users: []}, {
+// await engine(eventActions["VendorCreated"], "all", {
+//   db: { name: "abcd", users: [] },
+//   analytics: { someAnalyticsData: 42 },
+//   inbox: { message: "Inbox payload" },
+//   notification: { label: "Welcome", title: "Vendor", body: "Created", badge: "🟢" }
+// }, {
 //   async: true,
-//   beforeEach: (key) => console.log("Running handler:", key),
-//   afterEach: (key) => console.log("Finished handler:", key),
-//   onError: (err, key) => console.error("Error in", key, err),
 //   context: { user: "Admin" }
 // });
 
-// await engine(eventActions["VendorCreated"], "notification", {name: "abcd", users: []}, {
+// await engine(eventActions["VendorCreated"], "notification", {
+//   db: { name: "abcd", users: [] },
+//   analytics: { someAnalyticsData: 42 },
+//   inbox: { message: "Inbox payload" },
+//   notification: { label: "Welcome", title: "Vendor", body: "Created", badge: "🟢" }
+// }, {
 //   onError: (err, key) => console.error(`Handler ${key} failed`, err),
 //   context: { user: "Admin" }
 // });
 
-// await engine(eventActions["VendorCreated"], ["db", "analytics"], {name: "abcd", users: []});
+// await engine(eventActions["VendorCreated"], ["db", "analytics"], {
+//   db: { name: "abcd", users: [] },
+//   analytics: { someAnalyticsData: 42 },
+//   inbox: { message: "Inbox payload" },
+//   notification: { label: "Welcome", title: "Vendor", body: "Created", badge: "🟢" }
+// });

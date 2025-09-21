@@ -1,18 +1,20 @@
-import type { NotificationJobInput, NotificationJob } from '../models/notification.js';
+import type { NotificationJobInput, NotificationJob, AnyNotificationPayload } from '../types/notification.js';
 
-export function createNotificationJob<T = any>(input: NotificationJobInput<T>): NotificationJob<T> {
-    const { type, payload, userId, notificationId, scheduleAt } = input;
+export function createNotificationJob<Payload extends AnyNotificationPayload = AnyNotificationPayload>(
+    input: NotificationJobInput<Payload>
+): NotificationJob<Payload> {
+    const { type, payload, userId, notificationId, createdAt, scheduleAt } = input;
     return {
-        name: type,
+        type,
         data: {
             notificationId,
             userId,
-            type,
             payload,
-            scheduledAt: scheduleAt ? scheduleAt.toISOString() : null,
+            createdAt,
+            scheduledAt: scheduleAt || null,
         },
         opts: scheduleAt
-            ? { delay: scheduleAt.getTime() - Date.now() }
+            ? { delay: new Date(scheduleAt).getTime() - Date.now() }
             : {},
     };
 }

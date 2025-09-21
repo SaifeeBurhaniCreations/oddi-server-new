@@ -15,7 +15,9 @@
     "prisma:studio": "npx prisma studio",
     "prisma:seed": "tsx src/scripts/seed.ts",
     "prisma:aliases": "tsx src/scripts/gen-delegates.ts",
-    "prisma:run": "npx prisma generate && tsx src/scripts/gen-delegates.ts"
+    "prisma:run": "npx prisma generate && tsx src/scripts/gen-delegates.ts",
+    "docker:run": "docker-compose up -d",
+    "docker:kill": "docker-compose down"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.893.0",

@@ -43,12 +43,12 @@ model InboxMessage {
 
 model Event {
   id           String   @id @default(uuid())
-  entityType   String   // 'Vendor', 'RawMaterial', 'RMOrder', 'Production', 'Stock', 'Order', etc.
+  entityType   String   
   entityId     BigInt
-  eventType    String   // 'VendorSuppliesRM', 'RMOrderPlaced', 'ProductionStarted', 'StockMoved', etc.
+  eventType    String   
   occurredAt   DateTime @default(now())
   actorId      BigInt?
-  payload      Json     // Flexible event details
+  payload      Json     
   version      Int      @default(1)
   
   // Relations
@@ -109,7 +109,7 @@ model Vendor {
   
   // Relations
   rawMaterials RawMaterial[]
-  rmOrders     RMOrder[]
+  rmOrders     RawMaterialOrder[]
   
   @@map("vendors")
 }
@@ -119,27 +119,28 @@ model RawMaterial {
   name      String
   image     String?
   category  String?
-  unit      String   @default("KG")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+   // remove unit from here and paste in raw material order beacuse it only involve in raw material order only, not globally
   
   // Relations
   vendor       Vendor        @relation(fields: [vendorId], references: [id])
   vendorId     BigInt
-  rmOrders     RMOrder[]
+  rmOrders     RawMaterialOrder[]
   chamberStock ChamberStock[]
   
   @@map("raw_materials")
 }
 
-model RMOrder {
+model RawMaterialOrder  {
   id             BigInt      @id @default(autoincrement())
   status         OrderStatus @default(PENDING)
   quantityOrdered Int
   price          Decimal     @db.Decimal(10, 2)
   orderedDate    DateTime    @default(now())
-  recDate        DateTime?   // Expected receive date
-  estRecDate     DateTime?   // Estimated receive date
+  expectedReceiveDate         DateTime?   // change this aas per standard
+  estimatedReceiveDate     DateTime?   // change this aas per standard
+  unit      String   @default("KG")
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   
@@ -165,7 +166,7 @@ model OrderData {
   createdAt      DateTime @default(now())
   
   // Relations
-  rmOrder      RMOrder    @relation(fields: [rmOrderId], references: [id])
+  rmOrder      RawMaterialOrder    @relation(fields: [rmOrderId], references: [id])
   rmOrderId    BigInt
   production   Production @relation(fields: [productionId], references: [id])
   productionId BigInt
@@ -258,6 +259,8 @@ model ChamberStock {
   rawMaterialId BigInt
   chamber       Chamber     @relation(fields: [chamberId], references: [id])
   chamberId     BigInt
+  // for create bidirectional relation
+  orderProducts OrderProduct[]
   
   @@unique([rawMaterialId, chamberId])
   @@map("chamber_stock")
@@ -372,7 +375,7 @@ model TruckDetail {
   status   TruckStatus @default(AVAILABLE)
   
   // Relations
-  rmOrders       RMOrder[]
+  rmOrders       RawMaterialOrder[]
   dispatchOrders DispatchOrder[]
   challan        Challan?        @relation(fields: [challanId], references: [id])
   challanId      BigInt?

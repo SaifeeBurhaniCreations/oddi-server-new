@@ -1,5 +1,6 @@
 type HandlerFn = (payload: any, context?: any) => void | Promise<void>;
 type HandlerMap = { [key: string]: HandlerFn };
+type PayloadMap = { [key: string]: any };
 
 interface EngineOptions {
     beforeEach?: (key: string, payload: any, context?: any) => void | Promise<void>;
@@ -13,7 +14,7 @@ interface EngineOptions {
 export async function engine(
     handlers: HandlerMap,
     scope: "all" | string | string[],
-    payload?: any,
+    payloads: PayloadMap = {},
     options: EngineOptions = {}
 ) {
     let keys: string[];
@@ -29,11 +30,11 @@ export async function engine(
 
     const promises = keys.map(async key => {
         try {
-            if (options.beforeEach) await options.beforeEach(key, payload, options.context);
-            await handlers[key](payload, options.context);
-            if (options.afterEach) await options.afterEach(key, payload, options.context);
+            if (options.beforeEach) await options.beforeEach(key, payloads[key], options.context);
+            await handlers[key](payloads[key], options.context);
+            if (options.afterEach) await options.afterEach(key, payloads[key], options.context);
         } catch (error) {
-            if (options.onError) options.onError(error, key, payload, options.context);
+            if (options.onError) options.onError(error, key, payloads[key], options.context);
             else throw error;
         }
     });
