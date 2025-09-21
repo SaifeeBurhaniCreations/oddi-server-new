@@ -7,7 +7,7 @@ export const userJwtAuth = jwtAuth({
   algorithms: ['ES256'],
   headerName: 'Authorization',
   scheme: 'Bearer',
-  issuer: 'https://auth.sbc.com',
+  issuer: 'https://auth.sbcws.com',
   audience: 'oddiville-user-api',
   expiresIn: '12h',
 });
