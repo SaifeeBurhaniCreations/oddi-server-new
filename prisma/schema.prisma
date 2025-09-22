@@ -29,7 +29,7 @@ model OutboxMessage {
 
 model InboxMessage {
   id             String   @id @default(uuid())
-  eventId        String
+  eventId        String   @unique
   type           String
   content        Json
   receivedOnUtc  DateTime @default(now())
@@ -69,6 +69,7 @@ model User {
   id         BigInt   @id @default(autoincrement())
   name       String
   email      String   @unique
+  password   String
   address    String?
   contact    String?
   role       UserRole @default(OPERATOR)
@@ -79,7 +80,7 @@ model User {
   // Relations
   creator    User?       @relation("UserCreatedBy", fields: [createdBy], references: [id])
   createdUsers User[]    @relation("UserCreatedBy")
-  productions Production[]
+  // productions Production[]
   events     Event[]
   
   @@map("users")
@@ -92,356 +93,356 @@ enum UserRole {
   VIEWER
 }
 
-// ================================
-// VENDOR & RAW MATERIALS
-// ================================
+// // ================================
+// // VENDOR & RAW MATERIALS
+// // ================================
 
-model Vendor {
-  id        BigInt   @id @default(autoincrement())
-  name      String
-  address   String
-  state     String
-  city      String
-  zipCode   String
-  alias     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// model Vendor {
+//   id        BigInt   @id @default(autoincrement())
+//   name      String
+//   address   String
+//   state     String
+//   city      String
+//   zipCode   String
+//   alias     String?
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
   
-  // Relations
-  rawMaterials RawMaterial[]
-  rmOrders     RawMaterialOrder[]
+//   // Relations
+//   rawMaterials RawMaterial[]
+//   rmOrders     RawMaterialOrder[]
   
-  @@map("vendors")
-}
+//   @@map("vendors")
+// }
 
-model RawMaterial {
-  id        BigInt   @id @default(autoincrement())
-  name      String
-  image     String?
-  category  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-   // remove unit from here and paste in raw material order beacuse it only involve in raw material order only, not globally
+// model RawMaterial {
+//   id        BigInt   @id @default(autoincrement())
+//   name      String
+//   image     String?
+//   category  String?
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+//    // remove unit from here and paste in raw material order beacuse it only involve in raw material order only, not globally
   
-  // Relations
-  vendor       Vendor        @relation(fields: [vendorId], references: [id])
-  vendorId     BigInt
-  rmOrders     RawMaterialOrder[]
-  chamberStock ChamberStock[]
+//   // Relations
+//   vendor       Vendor        @relation(fields: [vendorId], references: [id])
+//   vendorId     BigInt
+//   rmOrders     RawMaterialOrder[]
+//   chamberStock ChamberStock[]
   
-  @@map("raw_materials")
-}
+//   @@map("raw_materials")
+// }
 
-model RawMaterialOrder  {
-  id             BigInt      @id @default(autoincrement())
-  status         OrderStatus @default(PENDING)
-  quantityOrdered Int
-  price          Decimal     @db.Decimal(10, 2)
-  orderedDate    DateTime    @default(now())
-  expectedReceiveDate         DateTime?   // change this aas per standard
-  estimatedReceiveDate     DateTime?   // change this aas per standard
-  unit      String   @default("KG")
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+// model RawMaterialOrder  {
+//   id             BigInt      @id @default(autoincrement())
+//   status         OrderStatus @default(PENDING)
+//   quantityOrdered Int
+//   price          Decimal     @db.Decimal(10, 2)
+//   orderedDate    DateTime    @default(now())
+//   expectedReceiveDate         DateTime?   // change this aas per standard
+//   estimatedReceiveDate     DateTime?   // change this aas per standard
+//   unit      String   @default("KG")
+//   createdAt      DateTime    @default(now())
+//   updatedAt      DateTime    @updatedAt
   
-  // Relations
-  rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
-  rawMaterialId BigInt
-  vendor        Vendor      @relation(fields: [vendorId], references: [id])
-  vendorId      BigInt
-  orderData     OrderData[]
-  truckDetail   TruckDetail? @relation(fields: [truckDetailId], references: [id])
-  truckDetailId BigInt?
+//   // Relations
+//   rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+//   rawMaterialId BigInt
+//   vendor        Vendor      @relation(fields: [vendorId], references: [id])
+//   vendorId      BigInt
+//   orderData     OrderData[]
+//   truckDetail   TruckDetail? @relation(fields: [truckDetailId], references: [id])
+//   truckDetailId BigInt?
   
-  @@map("rm_orders")
-}
+//   @@map("rm_orders")
+// }
 
-model OrderData {
-  id             BigInt   @id @default(autoincrement())
-  receivedQn     Int
-  rating         Int      @db.SmallInt @default(5)
-  warehousedDate DateTime?
-  sampleQuantity Int?
-  image          String?
-  createdAt      DateTime @default(now())
+// model OrderData {
+//   id             BigInt   @id @default(autoincrement())
+//   receivedQn     Int
+//   rating         Int      @db.SmallInt @default(5)
+//   warehousedDate DateTime?
+//   sampleQuantity Int?
+//   image          String?
+//   createdAt      DateTime @default(now())
   
-  // Relations
-  rmOrder      RawMaterialOrder    @relation(fields: [rmOrderId], references: [id])
-  rmOrderId    BigInt
-  production   Production @relation(fields: [productionId], references: [id])
-  productionId BigInt
-  image_rel    Image?     @relation(fields: [imageId], references: [id])
-  imageId      BigInt?
+//   // Relations
+//   rmOrder      RawMaterialOrder    @relation(fields: [rmOrderId], references: [id])
+//   rmOrderId    BigInt
+//   production   Production @relation(fields: [productionId], references: [id])
+//   productionId BigInt
+//   image_rel    Image?     @relation(fields: [imageId], references: [id])
+//   imageId      BigInt?
   
-  @@map("order_data")
-}
+//   @@map("order_data")
+// }
 
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  SHIPPED
-  DELIVERED
-  CANCELLED
-}
+// enum OrderStatus {
+//   PENDING
+//   CONFIRMED
+//   SHIPPED
+//   DELIVERED
+//   CANCELLED
+// }
 
-// ================================
-// PRODUCTION SYSTEM
-// ================================
+// // ================================
+// // PRODUCTION SYSTEM
+// // ================================
 
-model Production {
-  id         BigInt           @id @default(autoincrement())
-  status     ProductionStatus @default(PENDING)
-  batchCode  String           @unique
-  startTime  DateTime?
-  endTime    DateTime?
-  recovery   Decimal?         @db.Decimal(5, 2) // Recovery percentage
-  wastageQn  Int?
-  image      String?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
+// model Production {
+//   id         BigInt           @id @default(autoincrement())
+//   status     ProductionStatus @default(PENDING)
+//   batchCode  String           @unique
+//   startTime  DateTime?
+//   endTime    DateTime?
+//   recovery   Decimal?         @db.Decimal(5, 2) // Recovery percentage
+//   wastageQn  Int?
+//   image      String?
+//   createdAt  DateTime         @default(now())
+//   updatedAt  DateTime         @updatedAt
   
-  // Relations
-  user      User        @relation(fields: [userId], references: [id])
-  userId    BigInt
-  lane      Lane?       @relation(fields: [laneId], references: [id])
-  laneId    BigInt?
-  orderData OrderData[]
-  packets   Packet[]
+//   // Relations
+//   user      User        @relation(fields: [userId], references: [id])
+//   userId    BigInt
+//   lane      Lane?       @relation(fields: [laneId], references: [id])
+//   laneId    BigInt?
+//   orderData OrderData[]
+//   packets   Packet[]
   
-  @@map("productions")
-}
+//   @@map("productions")
+// }
 
-model Lane {
-  id       BigInt @id @default(autoincrement())
-  name     String
-  metaData Json?
+// model Lane {
+//   id       BigInt @id @default(autoincrement())
+//   name     String
+//   metaData Json?
   
-  // Relations
-  productions Production[]
+//   // Relations
+//   productions Production[]
   
-  @@map("lanes")
-}
+//   @@map("lanes")
+// }
 
-enum ProductionStatus {
-  PENDING
-  RUNNING
-  COMPLETED
-  FAILED
-}
+// enum ProductionStatus {
+//   PENDING
+//   RUNNING
+//   COMPLETED
+//   FAILED
+// }
 
-// ================================
-// STORAGE & INVENTORY
-// ================================
+// // ================================
+// // STORAGE & INVENTORY
+// // ================================
 
-model Chamber {
-  id        BigInt      @id @default(autoincrement())
-  name      String
-  createdBy BigInt
-  capacity  Int
-  type      ChamberType @default(COLD_STORAGE)
-  createdAt DateTime    @default(now())
+// model Chamber {
+//   id        BigInt      @id @default(autoincrement())
+//   name      String
+//   createdBy BigInt
+//   capacity  Int
+//   type      ChamberType @default(COLD_STORAGE)
+//   createdAt DateTime    @default(now())
   
-  // Relations
-  chamberStock  ChamberStock[]
-  orderProducts OrderProduct[]
+//   // Relations
+//   chamberStock  ChamberStock[]
+//   orderProducts OrderProduct[]
   
-  @@map("chambers")
-}
+//   @@map("chambers")
+// }
 
-model ChamberStock {
-  id       BigInt @id @default(autoincrement())
-  category String
-  rating   Int    @db.SmallInt @default(5)
-  quantity Int
+// model ChamberStock {
+//   id       BigInt @id @default(autoincrement())
+//   category String
+//   rating   Int    @db.SmallInt @default(5)
+//   quantity Int
   
-  // Relations
-  rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
-  rawMaterialId BigInt
-  chamber       Chamber     @relation(fields: [chamberId], references: [id])
-  chamberId     BigInt
-  // for create bidirectional relation
-  orderProducts OrderProduct[]
+//   // Relations
+//   rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+//   rawMaterialId BigInt
+//   chamber       Chamber     @relation(fields: [chamberId], references: [id])
+//   chamberId     BigInt
+//   // for create bidirectional relation
+//   orderProducts OrderProduct[]
   
-  @@unique([rawMaterialId, chamberId])
-  @@map("chamber_stock")
-}
+//   @@unique([rawMaterialId, chamberId])
+//   @@map("chamber_stock")
+// }
 
-enum ChamberType {
-  COLD_STORAGE
-  FREEZER
-  DRY_STORAGE
-}
+// enum ChamberType {
+//   COLD_STORAGE
+//   FREEZER
+//   DRY_STORAGE
+// }
 
-// ================================
-// PACKAGING & PRODUCTS
-// ================================
+// // ================================
+// // PACKAGING & PRODUCTS
+// // ================================
 
-model Packaging {
-  id          BigInt @id @default(autoincrement())
-  size        String // e.g., "35KG", "86KG"
-  quantity    Int
-  unit        String @default("KG")
-  productName String
+// model Packaging {
+//   id          BigInt @id @default(autoincrement())
+//   size        String // e.g., "35KG", "86KG"
+//   quantity    Int
+//   unit        String @default("KG")
+//   productName String
   
-  // Relations
-  products      Product[]
-  dispatchOrders DispatchOrder[]
+//   // Relations
+//   products      Product[]
+//   dispatchOrders DispatchOrder[]
   
-  @@map("packaging")
-}
+//   @@map("packaging")
+// }
 
-model Product {
-  id          BigInt @id @default(autoincrement())
-  productName String
+// model Product {
+//   id          BigInt @id @default(autoincrement())
+//   productName String
   
-  // Relations
-  packaging   Packaging @relation(fields: [packetId], references: [id])
-  packetId    BigInt
+//   // Relations
+//   packaging   Packaging @relation(fields: [packetId], references: [id])
+//   packetId    BigInt
   
-  @@map("products")
-}
+//   @@map("products")
+// }
 
-model Packet {
-  id       BigInt @id @default(autoincrement())
-  size     String
-  quantity Int
-  unit     String @default("KG")
+// model Packet {
+//   id       BigInt @id @default(autoincrement())
+//   size     String
+//   quantity Int
+//   unit     String @default("KG")
   
-  // Relations
-  production   Production @relation(fields: [productionId], references: [id])
-  productionId BigInt
+//   // Relations
+//   production   Production @relation(fields: [productionId], references: [id])
+//   productionId BigInt
   
-  @@map("packets")
-}
+//   @@map("packets")
+// }
 
-// ================================
-// ORDERS & DISPATCH
-// ================================
+// // ================================
+// // ORDERS & DISPATCH
+// // ================================
 
-model DispatchOrder {
-  id                BigInt      @id @default(autoincrement())
-  customerName      String
-  address           String
-  postalCode        String
-  country           String
-  state             String
-  city              String
-  status            OrderStatus @default(PENDING)
-  dispatchDate      DateTime?
-  estDeliveredDate  DateTime?
-  deliveredDate     DateTime?
-  images            String[]
-  productName       String
-  amount            Decimal     @db.Decimal(10, 2)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+// model DispatchOrder {
+//   id                BigInt      @id @default(autoincrement())
+//   customerName      String
+//   address           String
+//   postalCode        String
+//   country           String
+//   state             String
+//   city              String
+//   status            OrderStatus @default(PENDING)
+//   dispatchDate      DateTime?
+//   estDeliveredDate  DateTime?
+//   deliveredDate     DateTime?
+//   images            String[]
+//   productName       String
+//   amount            Decimal     @db.Decimal(10, 2)
+//   createdAt         DateTime    @default(now())
+//   updatedAt         DateTime    @updatedAt
   
-  // Relations
-  truckDetail   TruckDetail? @relation(fields: [truckDetailId], references: [id])
-  truckDetailId BigInt?
-  packaging     Packaging?   @relation(fields: [packagingId], references: [id])
-  packagingId   BigInt?
-  orderProducts OrderProduct[]
+//   // Relations
+//   truckDetail   TruckDetail? @relation(fields: [truckDetailId], references: [id])
+//   truckDetailId BigInt?
+//   packaging     Packaging?   @relation(fields: [packagingId], references: [id])
+//   packagingId   BigInt?
+//   orderProducts OrderProduct[]
   
-  @@map("dispatch_orders")
-}
+//   @@map("dispatch_orders")
+// }
 
-model OrderProduct {
-  id       BigInt @id @default(autoincrement())
-  quantity Int
+// model OrderProduct {
+//   id       BigInt @id @default(autoincrement())
+//   quantity Int
   
-  // Relations
-  chamber         Chamber       @relation(fields: [chamberId], references: [id])
-  chamberId       BigInt
-  chamberStock    ChamberStock  @relation(fields: [chamberStockId], references: [id])
-  chamberStockId  BigInt
-  dispatchOrder   DispatchOrder @relation(fields: [dispatchOrderId], references: [id])
-  dispatchOrderId BigInt
+//   // Relations
+//   chamber         Chamber       @relation(fields: [chamberId], references: [id])
+//   chamberId       BigInt
+//   chamberStock    ChamberStock  @relation(fields: [chamberStockId], references: [id])
+//   chamberStockId  BigInt
+//   dispatchOrder   DispatchOrder @relation(fields: [dispatchOrderId], references: [id])
+//   dispatchOrderId BigInt
   
-  @@map("order_products")
-}
+//   @@map("order_products")
+// }
 
-// ================================
-// LOGISTICS
-// ================================
+// // ================================
+// // LOGISTICS
+// // ================================
 
-model TruckDetail {
-  id       BigInt      @id @default(autoincrement())
-  number   String      @unique
-  name     String
-  type     TruckType   @default(REFRIGERATED)
-  capacity Int
-  contact  String?
-  status   TruckStatus @default(AVAILABLE)
+// model TruckDetail {
+//   id       BigInt      @id @default(autoincrement())
+//   number   String      @unique
+//   name     String
+//   type     TruckType   @default(REFRIGERATED)
+//   capacity Int
+//   contact  String?
+//   status   TruckStatus @default(AVAILABLE)
   
-  // Relations
-  rmOrders       RawMaterialOrder[]
-  dispatchOrders DispatchOrder[]
-  challan        Challan?        @relation(fields: [challanId], references: [id])
-  challanId      BigInt?
+//   // Relations
+//   rmOrders       RawMaterialOrder[]
+//   dispatchOrders DispatchOrder[]
+//   challan        Challan?        @relation(fields: [challanId], references: [id])
+//   challanId      BigInt?
   
-  @@map("truck_details")
-}
+//   @@map("truck_details")
+// }
 
-model Challan {
-  id        BigInt  @id @default(autoincrement())
-  tareWeight Decimal @db.Decimal(8, 2)
-  netWeight Decimal @db.Decimal(8, 2)
-  image     String?
+// model Challan {
+//   id        BigInt  @id @default(autoincrement())
+//   tareWeight Decimal @db.Decimal(8, 2)
+//   netWeight Decimal @db.Decimal(8, 2)
+//   image     String?
   
-  // Relations
-  truckDetails TruckDetail[]
+//   // Relations
+//   truckDetails TruckDetail[]
   
-  @@map("challans")
-}
+//   @@map("challans")
+// }
 
-enum TruckType {
-  REFRIGERATED
-  DRY_VAN
-  OPEN_TRUCK
-}
+// enum TruckType {
+//   REFRIGERATED
+//   DRY_VAN
+//   OPEN_TRUCK
+// }
 
-enum TruckStatus {
-  AVAILABLE
-  IN_TRANSIT
-  LOADING
-  UNLOADING
-  MAINTENANCE
-}
+// enum TruckStatus {
+//   AVAILABLE
+//   IN_TRANSIT
+//   LOADING
+//   UNLOADING
+//   MAINTENANCE
+// }
 
-// ================================
-// MEDIA & IMAGES
-// ================================
+// // ================================
+// // MEDIA & IMAGES
+// // ================================
 
-model Image {
-  id  BigInt @id @default(autoincrement())
-  url String
+// model Image {
+//   id  BigInt @id @default(autoincrement())
+//   url String
   
-  // Relations
-  orderData OrderData[]
+//   // Relations
+//   orderData OrderData[]
   
-  @@map("images")
-}
+//   @@map("images")
+// }
 
-// ================================
-// STOCK MOVEMENTS (Event Sourcing Style)
-// ================================
+// // ================================
+// // STOCK MOVEMENTS (Event Sourcing Style)
+// // ================================
 
-model StockMovement {
-  id        BigInt            @id @default(autoincrement())
-  productId BigInt?
-  chamberId BigInt
-  qty       Int
-  direction StockDirection
-  reason    String?
-  createdAt DateTime          @default(now())
+// model StockMovement {
+//   id        BigInt            @id @default(autoincrement())
+//   productId BigInt?
+//   chamberId BigInt
+//   qty       Int
+//   direction StockDirection
+//   reason    String?
+//   createdAt DateTime          @default(now())
   
-  @@index([productId, chamberId])
-  @@index([createdAt])
-  @@map("stock_movements")
-}
+//   @@index([productId, chamberId])
+//   @@index([createdAt])
+//   @@map("stock_movements")
+// }
 
-enum StockDirection {
-  IN
-  OUT
-}
+// enum StockDirection {
+//   IN
+//   OUT
+// }

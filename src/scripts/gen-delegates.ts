@@ -8,7 +8,7 @@ const modelKeys = Object.keys(prisma)
   .filter((key) => typeof (prisma as any)[key]?.findMany === "function");
 
 const lines = modelKeys.map(
-  (k) => `export const ${k}${suffix} = prisma.${k} as typeof prisma.test & { seeds?: () => Promise<void> };`
+  (k) => `export const ${k}${suffix} = prisma.${k} as typeof prisma.${k} & { seeds?: () => Promise<void> };`
 );
 // const lines = modelKeys.map(
 //   (k) => `export const ${k}${suffix}: PrismaClient['${k}'] = prisma.${k};`

@@ -33,7 +33,7 @@ const app = new Hono<{ Variables: Variables }>();
     }
 })();
 
-// GLOBAL MIDDLEWARES (external systems)
+// GLOBAL MIDDLEWARES
 app.use('*', uploader.withS3);
 app.use('*', kafkaMiddleware);
 app.use('*', prismaMiddleware);

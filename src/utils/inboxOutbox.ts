@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client'
 import { v4 as uuidv4 } from 'uuid'
-import type { OutboxMessage, InboxMessage } from '@prisma/client'
+import type { OutboxMessage } from '@prisma/client'
+import type { InboxMessage } from "../types/inbox.js";
+
 const prisma = new PrismaClient()
 
 export async function addOutboxMessage(
@@ -32,21 +34,25 @@ export async function markOutboxProcessed(
     })
 }
 
-export async function addInboxMessage(
-    eventId: string,
-    type: string,
-    content: object,
-    tx: PrismaClient = prisma
-): Promise<InboxMessage> {
-    return tx.inboxMessage.create({
-        data: {
-            id: uuidv4(),
-            eventId,
-            type,
-            content,
-            receivedOnUtc: new Date()
+export async function insertInboxMessage(payload: InboxMessage) {
+    await prisma.$transaction(async (tx) => {
+        try {
+            await tx.inbox.create({
+                data: {
+                    id: payload.id,
+                    eventId: payload.eventId,
+                    eventType: payload.type,
+                    content: payload.content,
+                    receivedOnUtc: payload.receivedOnUtc,
+                    processedOnUtc: payload.processedOnUtc,
+                    error: payload.error,
+                }
+            });
+        } catch (err: any) {
+            if (err.code === 'P2002') return;
+            throw err;
         }
-    })
+    });
 }
 
 export async function markInboxProcessed(
