@@ -43,7 +43,7 @@ model InboxMessage {
 
 model Event {
   id           String   @id @default(uuid())
-  entityType   String   // 'Vendor', 'RawMaterial', 'RMOrder', 'Production', 'Stock', 'Order', etc.
+  entityType   String   // 'Vendor', 'RawMaterial', 'RMPurchasing', 'Production', 'Stock', 'Order', etc.
   entityId     BigInt
   eventType    String   // 'VendorSuppliesRM', 'RMOrderPlaced', 'ProductionStarted', 'StockMoved', etc.
   occurredAt   DateTime @default(now())
@@ -109,7 +109,7 @@ model Vendor {
   
   // Relations
   rawMaterials RawMaterial[]
-  rmOrders     RMOrder[]
+  rmOrders     RMPurchasing[]
   
   @@map("vendors")
 }
@@ -117,8 +117,8 @@ model Vendor {
 model RawMaterial {
   id        BigInt   @id @default(autoincrement())
   name      String
-  image     String?
-  category  String?
+  image     String
+  category  RawMaterialCategory @default(IN)
   unit      String   @default("KG")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -126,51 +126,50 @@ model RawMaterial {
   // Relations
   vendor       Vendor        @relation(fields: [vendorId], references: [id])
   vendorId     BigInt
-  rmOrders     RMOrder[]
+  rmOrders     RMPurchasing[]
   chamberStock ChamberStock[]
   
   @@map("raw_materials")
 }
 
-model RMOrder {
-  id             BigInt      @id @default(autoincrement())
-  status         OrderStatus @default(PENDING)
-  quantityOrdered Int
-  price          Decimal     @db.Decimal(10, 2)
-  orderedDate    DateTime    @default(now())
-  recDate        DateTime?   // Expected receive date
-  estRecDate     DateTime?   // Estimated receive date
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+model RMPurchasing {
+  id                BigInt      @id @default(autoincrement())
+  status            OrderStatus @default(PENDING)
+  quantityOrdered   Int
+  quantityReceived  Int
+  price             Decimal     @db.Decimal(10, 2)
+  orderedDate       DateTime    @default(now())
+  recDate           DateTime?   // Expected receive date
+  estRecDate        DateTime?   // Estimated receive date
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
   
   // Relations
   rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
   rawMaterialId BigInt
   vendor        Vendor      @relation(fields: [vendorId], references: [id])
   vendorId      BigInt
-  orderData     OrderData[]
+  purchaseData  PurchaseData[]
   truckDetail   TruckDetail? @relation(fields: [truckDetailId], references: [id])
   truckDetailId BigInt?
   
   @@map("rm_orders")
 }
 
-model OrderData {
-  id             BigInt   @id @default(autoincrement())
-  receivedQn     Int
-  rating         Int      @db.SmallInt @default(5)
+model PurchaseData {
+  id             BigInt     @id @default(autoincrement())
+  rating         Int        @db.SmallInt @default(5)
   warehousedDate DateTime?
   sampleQuantity Int?
-  image          String?
-  createdAt      DateTime @default(now())
+  image          BigInt?
+  createdAt      DateTime   @default(now())
   
   // Relations
-  rmOrder      RMOrder    @relation(fields: [rmOrderId], references: [id])
+  rmOrder      RMPurchasing @relation(fields: [rmOrderId], references: [id])
   rmOrderId    BigInt
-  production   Production @relation(fields: [productionId], references: [id])
+  production   Production   @relation(fields: [productionId], references: [id])
   productionId BigInt
-  image_rel    Image?     @relation(fields: [imageId], references: [id])
-  imageId      BigInt?
+  image_rel    Image?       @relation(fields: [image], references: [id])
   
   @@map("order_data")
 }
@@ -188,24 +187,24 @@ enum OrderStatus {
 // ================================
 
 model Production {
-  id         BigInt           @id @default(autoincrement())
-  status     ProductionStatus @default(PENDING)
-  batchCode  String           @unique
-  startTime  DateTime?
-  endTime    DateTime?
-  recovery   Decimal?         @db.Decimal(5, 2) // Recovery percentage
-  wastageQn  Int?
-  image      String?
-  createdAt  DateTime         @default(now())
-  updatedAt  DateTime         @updatedAt
+  id           BigInt           @id @default(autoincrement())
+  status       ProductionStatus @default(PENDING)
+  batchCode    String           @unique
+  startTime    DateTime?
+  endTime      DateTime?
+  recovery     Decimal?         @db.Decimal(5, 2) // Recovery percentage
+  wastageQn    Int?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
   
   // Relations
-  user      User        @relation(fields: [userId], references: [id])
-  userId    BigInt
-  lane      Lane?       @relation(fields: [laneId], references: [id])
-  laneId    BigInt?
-  orderData OrderData[]
-  packets   Packet[]
+  user         User             @relation(fields: [userId], references: [id])
+  userId       BigInt
+  lane         Lane?            @relation(fields: [laneId], references: [id])
+  laneId       BigInt?
+  image_rel    Image?           @relation(fields: [image], references: [id])
+  image        BigInt?
+  purchaseData PurchaseData[]
   
   @@map("productions")
 }
@@ -237,7 +236,7 @@ model Chamber {
   name      String
   createdBy BigInt
   capacity  Int
-  type      ChamberType @default(COLD_STORAGE)
+  type      ChamberType @default(FROZEN)
   createdAt DateTime    @default(now())
   
   // Relations
@@ -248,65 +247,68 @@ model Chamber {
 }
 
 model ChamberStock {
-  id       BigInt @id @default(autoincrement())
-  category String
-  rating   Int    @db.SmallInt @default(5)
-  quantity Int
+  id            BigInt              @id @default(autoincrement())
+  category      RawMaterialCategory @default(IN)
+  rating        Int                 @db.SmallInt @default(5)
+  quantity      Int
   
   // Relations
-  rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+  rawMaterial   RawMaterial         @relation(fields: [rawMaterialId], references: [id])
   rawMaterialId BigInt
-  chamber       Chamber     @relation(fields: [chamberId], references: [id])
+  chamber       Chamber             @relation(fields: [chamberId], references: [id])
   chamberId     BigInt
+  orderProduct  OrderProduct[]
   
   @@unique([rawMaterialId, chamberId])
   @@map("chamber_stock")
 }
 
+enum RawMaterialCategory {
+  IN
+  OUT
+}
+
 enum ChamberType {
-  COLD_STORAGE
-  FREEZER
-  DRY_STORAGE
+  FROZEN
+  DRY
 }
 
 // ================================
 // PACKAGING & PRODUCTS
 // ================================
 
-model Packaging {
-  id          BigInt @id @default(autoincrement())
+model Packet {
+  id          BigInt    @id @default(autoincrement())
   size        String // e.g., "35KG", "86KG"
   quantity    Int
-  unit        String @default("KG")
-  productName String
+  unit        String    @default("KG")
+  productId   BigInt
   
   // Relations
-  products      Product[]
-  dispatchOrders DispatchOrder[]
+  products    Product[] @relation("ProductPackets")
   
   @@map("packaging")
 }
 
 model Product {
-  id          BigInt @id @default(autoincrement())
-  productName String
-  
+  id            BigInt      @id @default(autoincrement())
+  productName   String
+
   // Relations
-  packaging   Packaging @relation(fields: [packetId], references: [id])
-  packetId    BigInt
+  packets       Packet[]     @relation("ProductPackets")
+  orderProduct  OrderProduct[]
   
   @@map("products")
 }
 
-model Packet {
-  id       BigInt @id @default(autoincrement())
-  size     String
-  quantity Int
-  unit     String @default("KG")
+model Packaging {
+  id           BigInt         @id @default(autoincrement())
+  size         String
+  quantity     Int
+  unit         String         @default("KG")
   
-  // Relations
-  production   Production @relation(fields: [productionId], references: [id])
-  productionId BigInt
+  // Relations    
+  orderProduct OrderProduct[] @relation("OrderProductPackets")
   
   @@map("packets")
 }
@@ -316,44 +318,45 @@ model Packet {
 // ================================
 
 model DispatchOrder {
-  id                BigInt      @id @default(autoincrement())
+  id                BigInt          @id @default(autoincrement())
   customerName      String
   address           String
   postalCode        String
   country           String
   state             String
   city              String
-  status            OrderStatus @default(PENDING)
+  status            OrderStatus     @default(PENDING)
   dispatchDate      DateTime?
   estDeliveredDate  DateTime?
   deliveredDate     DateTime?
-  images            String[]
-  productName       String
-  amount            Decimal     @db.Decimal(10, 2)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  amount            Decimal         @db.Decimal(10, 2)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  truckDetailId     BigInt?
   
   // Relations
-  truckDetail   TruckDetail? @relation(fields: [truckDetailId], references: [id])
-  truckDetailId BigInt?
-  packaging     Packaging?   @relation(fields: [packagingId], references: [id])
-  packagingId   BigInt?
-  orderProducts OrderProduct[]
+  images            Image[]         @relation("OrderImages")
+  truckDetail       TruckDetail?    @relation(fields: [truckDetailId], references: [id])
+  orderProducts     OrderProduct[]  @relation("OrderProduct_DispatchOrder")
   
   @@map("dispatch_orders")
 }
 
 model OrderProduct {
-  id       BigInt @id @default(autoincrement())
-  quantity Int
+  id              BigInt          @id @default(autoincrement())
+  quantity        Int
+  productId       BigInt
+  chamberId       BigInt
+  packagingId     BigInt?
+  chamberStockId  BigInt
+  dispatchOrderId BigInt
   
   // Relations
-  chamber         Chamber       @relation(fields: [chamberId], references: [id])
-  chamberId       BigInt
-  chamberStock    ChamberStock  @relation(fields: [chamberStockId], references: [id])
-  chamberStockId  BigInt
-  dispatchOrder   DispatchOrder @relation(fields: [dispatchOrderId], references: [id])
-  dispatchOrderId BigInt
+  product         Product?        @relation(fields: [productId], references: [id])
+  chamber         Chamber         @relation(fields: [chamberId], references: [id])
+  chamberStock    ChamberStock    @relation(fields: [chamberStockId], references: [id])
+  dispatchOrder   DispatchOrder   @relation(fields: [dispatchOrderId], references: [id], name: "OrderProduct_DispatchOrder")
+  Packaging       Packaging[]     @relation("OrderProductPackets")
   
   @@map("order_products")
 }
@@ -366,13 +369,13 @@ model TruckDetail {
   id       BigInt      @id @default(autoincrement())
   number   String      @unique
   name     String
-  type     TruckType   @default(REFRIGERATED)
+  type     String
   capacity Int
   contact  String?
   status   TruckStatus @default(AVAILABLE)
   
   // Relations
-  rmOrders       RMOrder[]
+  rmPurchases       RMPurchasing[]
   dispatchOrders DispatchOrder[]
   challan        Challan?        @relation(fields: [challanId], references: [id])
   challanId      BigInt?
@@ -381,21 +384,16 @@ model TruckDetail {
 }
 
 model Challan {
-  id        BigInt  @id @default(autoincrement())
+  id         BigInt  @id @default(autoincrement())
   tareWeight Decimal @db.Decimal(8, 2)
-  netWeight Decimal @db.Decimal(8, 2)
-  image     String?
+  netWeight  Decimal @db.Decimal(8, 2)
+  image      BigInt
   
   // Relations
   truckDetails TruckDetail[]
+  image_ref    Image @relation(fields: [image], references: [id])
   
   @@map("challans")
-}
-
-enum TruckType {
-  REFRIGERATED
-  DRY_VAN
-  OPEN_TRUCK
 }
 
 enum TruckStatus {
@@ -415,7 +413,10 @@ model Image {
   url String
   
   // Relations
-  orderData OrderData[]
+  purchaseData     PurchaseData[]
+  Production    Production[]
+  challan       Challan[]
+  dispatchOrder DispatchOrder[] @relation("OrderImages")
   
   @@map("images")
 }
@@ -425,13 +426,13 @@ model Image {
 // ================================
 
 model StockMovement {
-  id        BigInt            @id @default(autoincrement())
+  id        BigInt       @id @default(autoincrement())
   productId BigInt?
   chamberId BigInt
   qty       Int
   direction StockDirection
   reason    String?
-  createdAt DateTime          @default(now())
+  createdAt DateTime     @default(now())
   
   @@index([productId, chamberId])
   @@index([createdAt])
