@@ -14,12 +14,12 @@ datasource db {
 }
 
 model OutboxMessage {
-  id             String   @id @default(uuid())
+  id             String    @id @default(uuid())
   type           String
-  processed   Boolean  @default(false)
+  processed      Boolean   @default(false)
   content        Json
-  occurredOnUtc  DateTime @default(now())
-  createdAt   DateTime @default(now())
+  occurredOnUtc  DateTime  @default(now())
+  createdAt      DateTime  @default(now())
   processedOnUtc DateTime?
   error          String?
 
@@ -28,11 +28,11 @@ model OutboxMessage {
 }
 
 model InboxMessage {
-  id             String   @id @default(uuid())
-  eventId        String   @unique
+  id             String    @id @default(uuid())
+  eventId        String    @unique
   type           String
   content        Json
-  receivedOnUtc  DateTime @default(now())
+  receivedOnUtc  DateTime  @default(now())
   processedOnUtc DateTime?
   error          String?
 }
@@ -42,24 +42,23 @@ model InboxMessage {
 // ================================
 
 model Event {
-  id           String   @id @default(uuid())
-  entityType   String   
-  entityId     String
-  eventType    String   
-  occurredAt   DateTime @default(now())
-  actorId      String?
-  payload      Json     
-  version      Int      @default(1)
-  
+  id         String   @id @default(uuid())
+  entityType String // 'Vendor', 'RawMaterial', 'RMPurchasing', 'Production', 'Stock', 'Order', etc.
+  entityId   String
+  eventType  String
+  occurredAt DateTime @default(now())
+  actorId    String?
+  payload    Json
+  version    Int      @default(1)
+
   // Relations
-  actor        User?    @relation(fields: [actorId], references: [id])
-  
+  actor User? @relation(fields: [actorId], references: [id])
+
   @@index([entityType, entityId])
   @@index([eventType])
   @@index([occurredAt])
   @@map("events")
 }
-
 
 // ================================
 // USER MANAGEMENT
@@ -69,381 +68,379 @@ model User {
   id         String   @id @default(uuid())
   name       String
   email      String   @unique
+  profilePic String
   password   String
   address    String?
   contact    String?
-  role       UserRole @default(OPERATOR)
-  profilePic String?
+  role       UserRole @default(MANAGER)
   createdBy  String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  
+
   // Relations
-  creator    User?       @relation("UserCreatedBy", fields: [createdBy], references: [id])
-  createdUsers User[]    @relation("UserCreatedBy")
-  // productions Production[]
-  events     Event[]
-  
+  creator      User?        @relation("UserCreatedBy", fields: [createdBy], references: [id])
+  createdUsers User[]       @relation("UserCreatedBy")
+  image_ref    Image        @relation(fields: [profilePic], references: [id])
+  productions  Production[]
+  events       Event[]
+
   @@map("users")
 }
 
 enum UserRole {
   ADMIN
   MANAGER
-  OPERATOR
-  VIEWER
 }
 
 // // ================================
 // // VENDOR & RAW MATERIALS
 // // ================================
 
-// model Vendor {
-//   id         String   @id @default(uuid())
-//   name      String
-//   address   String
-//   state     String
-//   city      String
-//   zipCode   String
-//   alias     String?
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-  
-//   // Relations
-//   rawMaterials RawMaterial[]
-//   rmOrders     RawMaterialOrder[]
-  
-//   @@map("vendors")
-// }
+model Vendor {
+  id        String   @id @default(uuid())
+  name      String
+  address   String
+  state     String
+  city      String
+  zipCode   String
+  alias     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-// model RawMaterial {
-//   id         String   @id @default(uuid())
-//   name      String
-//   image     String?
-//   category  String?
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-//    // remove unit from here and paste in raw material order beacuse it only involve in raw material order only, not globally
-  
-//   // Relations
-//   vendor       Vendor        @relation(fields: [vendorId], references: [id])
-//   vendorId     String
-//   rmOrders     RawMaterialOrder[]
-//   chamberStock ChamberStock[]
-  
-//   @@map("raw_materials")
-// }
+  // Relations
+  rawMaterials RawMaterial[]
+  rmOrders     RMPurchasing[]
 
-// model RawMaterialOrder  {
-//   id             String      @id @default(autoincrement())
-//   status         OrderStatus @default(PENDING)
-//   quantityOrdered Int
-//   price          Decimal     @db.Decimal(10, 2)
-//   orderedDate    DateTime    @default(now())
-//   expectedReceiveDate         DateTime?   // change this aas per standard
-//   estimatedReceiveDate     DateTime?   // change this aas per standard
-//   unit      String   @default("KG")
-//   createdAt      DateTime    @default(now())
-//   updatedAt      DateTime    @updatedAt
-  
-//   // Relations
-//   rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
-//   rawMaterialId String
-//   vendor        Vendor      @relation(fields: [vendorId], references: [id])
-//   vendorId      String
-//   orderData     OrderData[]
-//   truckDetail   TruckDetail? @relation(fields: [truckDetailId], references: [id])
-//   truckDetailId String?
-  
-//   @@map("rm_orders")
-// }
+  @@map("vendors")
+}
 
-// model OrderData {
-//   id             String   @id @default(autoincrement())
-//   receivedQn     Int
-//   rating         Int      @db.SmallInt @default(5)
-//   warehousedDate DateTime?
-//   sampleQuantity Int?
-//   image          String?
-//   createdAt      DateTime @default(now())
-  
-//   // Relations
-//   rmOrder      RawMaterialOrder    @relation(fields: [rmOrderId], references: [id])
-//   rmOrderId    String
-//   production   Production @relation(fields: [productionId], references: [id])
-//   productionId String
-//   image_rel    Image?     @relation(fields: [imageId], references: [id])
-//   imageId      String?
-  
-//   @@map("order_data")
-// }
+model RawMaterial {
+  id        String              @id @default(uuid())
+  name      String
+  image     String
+  category  RawMaterialCategory @default(IN)
+  unit      String              @default("KG")
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
 
-// enum OrderStatus {
-//   PENDING
-//   CONFIRMED
-//   SHIPPED
-//   DELIVERED
-//   CANCELLED
-// }
+  // Relations
+  vendor       Vendor         @relation(fields: [vendorId], references: [id])
+  vendorId     String
+  rmOrders     RMPurchasing[]
+  chamberStock ChamberStock[]
+
+  @@map("raw_materials")
+}
+
+model RMPurchasing {
+  id               String      @id @default(uuid())
+  status           OrderStatus @default(PENDING)
+  quantityOrdered  Int
+  quantityReceived Int
+  price            Decimal     @db.Decimal(10, 2)
+  orderedDate      DateTime    @default(now())
+  recDate          DateTime? // Expected receive date
+  estRecDate       DateTime? // Estimated receive date
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  // Relations
+  rawMaterial   RawMaterial    @relation(fields: [rawMaterialId], references: [id])
+  rawMaterialId String
+  vendor        Vendor         @relation(fields: [vendorId], references: [id])
+  vendorId      String
+  purchaseData  PurchaseData[]
+  truckDetail   TruckDetail?   @relation(fields: [truckDetailId], references: [id])
+  truckDetailId String?
+
+  @@map("rm_orders")
+}
+
+model PurchaseData {
+  id             String    @id @default(uuid())
+  rating         Int       @default(5) @db.SmallInt
+  warehousedDate DateTime?
+  sampleQuantity Int?
+  image          String?
+  createdAt      DateTime  @default(now())
+
+  // Relations
+  rmOrder      RMPurchasing @relation(fields: [rmOrderId], references: [id])
+  rmOrderId    String
+  production   Production   @relation(fields: [productionId], references: [id])
+  productionId String
+  image_rel    Image?       @relation(fields: [image], references: [id])
+
+  @@map("order_data")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
 
 // // ================================
 // // PRODUCTION SYSTEM
 // // ================================
 
-// model Production {
-//   id         String           @id @default(autoincrement())
-//   status     ProductionStatus @default(PENDING)
-//   batchCode  String           @unique
-//   startTime  DateTime?
-//   endTime    DateTime?
-//   recovery   Decimal?         @db.Decimal(5, 2) // Recovery percentage
-//   wastageQn  Int?
-//   image      String?
-//   createdAt  DateTime         @default(now())
-//   updatedAt  DateTime         @updatedAt
-  
-//   // Relations
-//   user      User        @relation(fields: [userId], references: [id])
-//   userId    String
-//   lane      Lane?       @relation(fields: [laneId], references: [id])
-//   laneId    String?
-//   orderData OrderData[]
-//   packets   Packet[]
-  
-//   @@map("productions")
-// }
+model Production {
+  id        String           @id @default(uuid())
+  status    ProductionStatus @default(PENDING)
+  batchCode String           @unique
+  startTime DateTime?
+  endTime   DateTime?
+  recovery  Decimal?         @db.Decimal(5, 2) // Recovery percentage
+  wastageQn Int?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 
-// model Lane {
-//   id       String @id @default(autoincrement())
-//   name     String
-//   metaData Json?
-  
-//   // Relations
-//   productions Production[]
-  
-//   @@map("lanes")
-// }
+  // Relations
+  user         User           @relation(fields: [userId], references: [id])
+  userId       String
+  lane         Lane?          @relation(fields: [laneId], references: [id])
+  laneId       String?
+  image_rel    Image?         @relation(fields: [image], references: [id])
+  image        String?
+  purchaseData PurchaseData[]
 
-// enum ProductionStatus {
-//   PENDING
-//   RUNNING
-//   COMPLETED
-//   FAILED
-// }
+  @@map("productions")
+}
+
+model Lane {
+  id       String @id @default(uuid())
+  name     String
+  metaData Json?
+
+  // Relations
+  productions Production[]
+
+  @@map("lanes")
+}
+
+enum ProductionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
 
 // // ================================
 // // STORAGE & INVENTORY
 // // ================================
 
-// model Chamber {
-//   id        String      @id @default(autoincrement())
-//   name      String
-//   createdBy String
-//   capacity  Int
-//   type      ChamberType @default(COLD_STORAGE)
-//   createdAt DateTime    @default(now())
-  
-//   // Relations
-//   chamberStock  ChamberStock[]
-//   orderProducts OrderProduct[]
-  
-//   @@map("chambers")
-// }
+model Chamber {
+  id        String      @id @default(uuid())
+  name      String
+  createdBy String
+  capacity  Int
+  type      ChamberType @default(FROZEN)
+  createdAt DateTime    @default(now())
 
-// model ChamberStock {
-//   id       String @id @default(autoincrement())
-//   category String
-//   rating   Int    @db.SmallInt @default(5)
-//   quantity Int
-  
-//   // Relations
-//   rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
-//   rawMaterialId String
-//   chamber       Chamber     @relation(fields: [chamberId], references: [id])
-//   chamberId     String
-//   // for create bidirectional relation
-//   orderProducts OrderProduct[]
-  
-//   @@unique([rawMaterialId, chamberId])
-//   @@map("chamber_stock")
-// }
+  // Relations
+  chamberStock  ChamberStock[]
+  orderProducts OrderProduct[]
 
-// enum ChamberType {
-//   COLD_STORAGE
-//   FREEZER
-//   DRY_STORAGE
-// }
+  @@map("chambers")
+}
+
+model ChamberStock {
+  id       String              @id @default(uuid())
+  category RawMaterialCategory @default(IN)
+  rating   Int                 @default(5) @db.SmallInt
+  quantity Int
+
+  // Relations
+  rawMaterial   RawMaterial    @relation(fields: [rawMaterialId], references: [id])
+  rawMaterialId String
+  chamber       Chamber        @relation(fields: [chamberId], references: [id])
+  chamberId     String
+  orderProduct  OrderProduct[]
+
+  @@unique([rawMaterialId, chamberId])
+  @@map("chamber_stock")
+}
+
+enum RawMaterialCategory {
+  IN
+  OUT
+}
+
+enum ChamberType {
+  FROZEN
+  DRY
+}
 
 // // ================================
 // // PACKAGING & PRODUCTS
 // // ================================
 
-// model Packaging {
-//   id          String @id @default(autoincrement())
-//   size        String // e.g., "35KG", "86KG"
-//   quantity    Int
-//   unit        String @default("KG")
-//   productName String
-  
-//   // Relations
-//   products      Product[]
-//   dispatchOrders DispatchOrder[]
-  
-//   @@map("packaging")
-// }
+model Packet {
+  id        String @id @default(uuid())
+  size      String // e.g., "35KG", "86KG"
+  quantity  Int
+  unit      String @default("KG")
+  productId String
 
-// model Product {
-//   id          String @id @default(autoincrement())
-//   productName String
-  
-//   // Relations
-//   packaging   Packaging @relation(fields: [packetId], references: [id])
-//   packetId    String
-  
-//   @@map("products")
-// }
+  // Relations
+  products Product[] @relation("ProductPackets")
 
-// model Packet {
-//   id       String @id @default(autoincrement())
-//   size     String
-//   quantity Int
-//   unit     String @default("KG")
-  
-//   // Relations
-//   production   Production @relation(fields: [productionId], references: [id])
-//   productionId String
-  
-//   @@map("packets")
-// }
+  @@map("packaging")
+}
+
+model Product {
+  id          String @id @default(uuid())
+  productName String
+
+  // Relations
+  packets      Packet[]       @relation("ProductPackets")
+  orderProduct OrderProduct[]
+
+  @@map("products")
+}
+
+model Packaging {
+  id       String @id @default(uuid())
+  size     String
+  quantity Int
+  unit     String @default("KG")
+
+  // Relations    
+  orderProduct OrderProduct[] @relation("OrderProductPackets")
+
+  @@map("packets")
+}
 
 // // ================================
 // // ORDERS & DISPATCH
 // // ================================
 
-// model DispatchOrder {
-//   id                String      @id @default(autoincrement())
-//   customerName      String
-//   address           String
-//   postalCode        String
-//   country           String
-//   state             String
-//   city              String
-//   status            OrderStatus @default(PENDING)
-//   dispatchDate      DateTime?
-//   estDeliveredDate  DateTime?
-//   deliveredDate     DateTime?
-//   images            String[]
-//   productName       String
-//   amount            Decimal     @db.Decimal(10, 2)
-//   createdAt         DateTime    @default(now())
-//   updatedAt         DateTime    @updatedAt
-  
-//   // Relations
-//   truckDetail   TruckDetail? @relation(fields: [truckDetailId], references: [id])
-//   truckDetailId String?
-//   packaging     Packaging?   @relation(fields: [packagingId], references: [id])
-//   packagingId   String?
-//   orderProducts OrderProduct[]
-  
-//   @@map("dispatch_orders")
-// }
+model DispatchOrder {
+  id               String      @id @default(uuid())
+  customerName     String
+  address          String
+  postalCode       String
+  country          String
+  state            String
+  city             String
+  status           OrderStatus @default(PENDING)
+  dispatchDate     DateTime?
+  estDeliveredDate DateTime?
+  deliveredDate    DateTime?
+  amount           Decimal     @db.Decimal(10, 2)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  truckDetailId    String?
 
-// model OrderProduct {
-//   id       String @id @default(autoincrement())
-//   quantity Int
-  
-//   // Relations
-//   chamber         Chamber       @relation(fields: [chamberId], references: [id])
-//   chamberId       String
-//   chamberStock    ChamberStock  @relation(fields: [chamberStockId], references: [id])
-//   chamberStockId  String
-//   dispatchOrder   DispatchOrder @relation(fields: [dispatchOrderId], references: [id])
-//   dispatchOrderId String
-  
-//   @@map("order_products")
-// }
+  // Relations
+  images        Image[]        @relation("OrderImages")
+  truckDetail   TruckDetail?   @relation(fields: [truckDetailId], references: [id])
+  orderProducts OrderProduct[] @relation("OrderProduct_DispatchOrder")
+
+  @@map("dispatch_orders")
+}
+
+model OrderProduct {
+  id              String  @id @default(uuid())
+  quantity        Int
+  productId       String
+  chamberId       String
+  packagingId     String?
+  chamberStockId  String
+  dispatchOrderId String
+
+  // Relations
+  product       Product?      @relation(fields: [productId], references: [id])
+  chamber       Chamber       @relation(fields: [chamberId], references: [id])
+  chamberStock  ChamberStock  @relation(fields: [chamberStockId], references: [id])
+  dispatchOrder DispatchOrder @relation(fields: [dispatchOrderId], references: [id], name: "OrderProduct_DispatchOrder")
+  Packaging     Packaging[]   @relation("OrderProductPackets")
+
+  @@map("order_products")
+}
 
 // // ================================
 // // LOGISTICS
 // // ================================
 
-// model TruckDetail {
-//   id       String      @id @default(autoincrement())
-//   number   String      @unique
-//   name     String
-//   type     TruckType   @default(REFRIGERATED)
-//   capacity Int
-//   contact  String?
-//   status   TruckStatus @default(AVAILABLE)
-  
-//   // Relations
-//   rmOrders       RawMaterialOrder[]
-//   dispatchOrders DispatchOrder[]
-//   challan        Challan?        @relation(fields: [challanId], references: [id])
-//   challanId      String?
-  
-//   @@map("truck_details")
-// }
+model TruckDetail {
+  id       String      @id @default(uuid())
+  number   String      @unique
+  name     String
+  type     String
+  capacity Int
+  contact  String?
+  status   TruckStatus @default(AVAILABLE)
 
-// model Challan {
-//   id        String  @id @default(autoincrement())
-//   tareWeight Decimal @db.Decimal(8, 2)
-//   netWeight Decimal @db.Decimal(8, 2)
-//   image     String?
-  
-//   // Relations
-//   truckDetails TruckDetail[]
-  
-//   @@map("challans")
-// }
+  // Relations
+  rmPurchases    RMPurchasing[]
+  dispatchOrders DispatchOrder[]
+  challan        Challan?        @relation(fields: [challanId], references: [id])
+  challanId      String?
 
-// enum TruckType {
-//   REFRIGERATED
-//   DRY_VAN
-//   OPEN_TRUCK
-// }
+  @@map("truck_details")
+}
 
-// enum TruckStatus {
-//   AVAILABLE
-//   IN_TRANSIT
-//   LOADING
-//   UNLOADING
-//   MAINTENANCE
-// }
+model Challan {
+  id         String  @id @default(uuid())
+  tareWeight Decimal @db.Decimal(8, 2)
+  netWeight  Decimal @db.Decimal(8, 2)
+  image      String
+
+  // Relations
+  truckDetails TruckDetail[]
+  image_ref    Image         @relation(fields: [image], references: [id])
+
+  @@map("challans")
+}
+
+enum TruckStatus {
+  AVAILABLE
+  IN_TRANSIT
+  LOADING
+  UNLOADING
+  MAINTENANCE
+}
 
 // // ================================
 // // MEDIA & IMAGES
 // // ================================
 
-// model Image {
-//   id  String @id @default(autoincrement())
-//   url String
-  
-//   // Relations
-//   orderData OrderData[]
-  
-//   @@map("images")
-// }
+model Image {
+  id  String @id @default(uuid())
+  url String
+
+  // Relations
+  purchaseData  PurchaseData[]
+  Production    Production[]
+  challan       Challan[]
+  User          User[]
+  dispatchOrder DispatchOrder[] @relation("OrderImages")
+
+  @@map("images")
+}
 
 // // ================================
 // // STOCK MOVEMENTS (Event Sourcing Style)
 // // ================================
 
-// model StockMovement {
-//   id        String            @id @default(autoincrement())
-//   productId String?
-//   chamberId String
-//   qty       Int
-//   direction StockDirection
-//   reason    String?
-//   createdAt DateTime          @default(now())
-  
-//   @@index([productId, chamberId])
-//   @@index([createdAt])
-//   @@map("stock_movements")
-// }
+model StockMovement {
+  id        String         @id @default(uuid())
+  productId String?
+  chamberId String
+  qty       Int
+  direction StockDirection
+  reason    String?
+  createdAt DateTime       @default(now())
 
-// enum StockDirection {
-//   IN
-//   OUT
-// }
+  @@index([productId, chamberId])
+  @@index([createdAt])
+  @@map("stock_movements")
+}
+
+enum StockDirection {
+  IN
+  OUT
+}
