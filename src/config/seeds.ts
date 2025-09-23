@@ -1,11 +1,14 @@
+import { uuidv4 } from "../sbc/utils/uuid/uuidv4.js";
 import { prisma } from "./infra/prisma.js";
 
 // ---- ONLY EDIT THIS ----
+const rootId = uuidv4();
+
 export const SEED_DATA = {
-  test: [
-    { name: "Demo Test A", status: "PASSED", result: "Success" },
-    { name: "Demo Test B", status: "FAILED", result: "Error" },
-    { name: "Demo Test C", status: "PENDING", result: null },
+  user: [
+    { id: rootId, name: "Root Admin", email: "admin@oddiville.com", password: "$2b$10$EeetXBwuOkZuy0/V.1g.r.25rIyt/zGCHaJOiU6COQjq/3uhbWmrm", address: "Malwa Mill, Indore", contact: "1234567890", role: "ADMIN", profilePic: "http://localhost:3000/image/user/admin-image.png", createdBy: null },
+
+    { name: "OddiVille Manager", email: "manager@oddiville.com", password: "$2b$10$EeetXBwuOkZuy0/V.1g.r.25rIyt/zGCHaJOiU6COQjq/3uhbWmrm", address: "Dhar Road, Indore", contact: "0987654321", role: "MANAGER", profilePic: "http://localhost:3000/image/user/manager-image.png", createdBy: rootId },
   ],
 };
 // ---- DO NOT EDIT BELOW ----
@@ -13,6 +16,7 @@ export const SEED_DATA = {
 export type DelegateType = typeof prisma[keyof typeof prisma];
 
 Object.entries(SEED_DATA).forEach(([model, data]) => {
+  if (typeof prisma[model as keyof typeof prisma] === 'object' && prisma[model as keyof typeof prisma] !== null) {
   Object.defineProperty(prisma[model as keyof typeof prisma], "seeds", {
     value: async () => {
       await prisma[model].createMany({
@@ -24,6 +28,7 @@ Object.entries(SEED_DATA).forEach(([model, data]) => {
     configurable: false,
     writable: false
   });
+}
 });
 
 Object.defineProperty(prisma, "seeds", {

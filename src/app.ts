@@ -16,12 +16,13 @@ import { appRequestLogger } from './middlewares/requestLogger.js';
 import { Cqrs } from './middlewares/cqrs.js';
 
 // Types
-import type { Variables } from './types/utils/contextVar.js';
 
 // App infrastructure/startup
 import { bootstrap } from './config/infra/kafka.js';
+import { jwtConfigMiddleware } from './middlewares/jwtConfig.js';
+import { registerUserRoutes } from './routes/user.js';
 
-const app = new Hono<{ Variables: Variables }>();
+const app = new Hono();
 
 // Kafka bootstrap
 (async () => {
@@ -38,17 +39,22 @@ app.use('*', uploader.withS3);
 app.use('*', kafkaMiddleware);
 app.use('*', prismaMiddleware);
 app.use('*', redisMiddleware);
+app.use('*', jwtConfigMiddleware);
 
 // API-route-specific middlewares
 app.use('/api/*', apiRateLimiter);
 app.use('/api/*', Cqrs);
-app.use('/api/users/*', userJwtAuth);
+app.use('/api/users/*', (c, next) => {
+    if (c.req.path === '/api/users/login') return next(); 
+    return userJwtAuth(c, next);
+});
 
 // Logging
 app.use(appRequestLogger);
 
+registerUserRoutes(app)
+
 // ROUTES
 app.get('/', (c) => c.text('OddiVille Alive!'));
 app.route('/files', uploader.router);
-
 export { app };

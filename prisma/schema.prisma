@@ -44,10 +44,10 @@ model InboxMessage {
 model Event {
   id           String   @id @default(uuid())
   entityType   String   
-  entityId     BigInt
+  entityId     String
   eventType    String   
   occurredAt   DateTime @default(now())
-  actorId      BigInt?
+  actorId      String?
   payload      Json     
   version      Int      @default(1)
   
@@ -66,14 +66,15 @@ model Event {
 // ================================
 
 model User {
-  id         BigInt   @id @default(autoincrement())
+  id         String   @id @default(uuid())
   name       String
   email      String   @unique
   password   String
   address    String?
   contact    String?
   role       UserRole @default(OPERATOR)
-  createdBy  BigInt?
+  profilePic String?
+  createdBy  String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   
@@ -98,7 +99,7 @@ enum UserRole {
 // // ================================
 
 // model Vendor {
-//   id        BigInt   @id @default(autoincrement())
+//   id         String   @id @default(uuid())
 //   name      String
 //   address   String
 //   state     String
@@ -116,7 +117,7 @@ enum UserRole {
 // }
 
 // model RawMaterial {
-//   id        BigInt   @id @default(autoincrement())
+//   id         String   @id @default(uuid())
 //   name      String
 //   image     String?
 //   category  String?
@@ -126,7 +127,7 @@ enum UserRole {
   
 //   // Relations
 //   vendor       Vendor        @relation(fields: [vendorId], references: [id])
-//   vendorId     BigInt
+//   vendorId     String
 //   rmOrders     RawMaterialOrder[]
 //   chamberStock ChamberStock[]
   
@@ -134,7 +135,7 @@ enum UserRole {
 // }
 
 // model RawMaterialOrder  {
-//   id             BigInt      @id @default(autoincrement())
+//   id             String      @id @default(autoincrement())
 //   status         OrderStatus @default(PENDING)
 //   quantityOrdered Int
 //   price          Decimal     @db.Decimal(10, 2)
@@ -147,18 +148,18 @@ enum UserRole {
   
 //   // Relations
 //   rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
-//   rawMaterialId BigInt
+//   rawMaterialId String
 //   vendor        Vendor      @relation(fields: [vendorId], references: [id])
-//   vendorId      BigInt
+//   vendorId      String
 //   orderData     OrderData[]
 //   truckDetail   TruckDetail? @relation(fields: [truckDetailId], references: [id])
-//   truckDetailId BigInt?
+//   truckDetailId String?
   
 //   @@map("rm_orders")
 // }
 
 // model OrderData {
-//   id             BigInt   @id @default(autoincrement())
+//   id             String   @id @default(autoincrement())
 //   receivedQn     Int
 //   rating         Int      @db.SmallInt @default(5)
 //   warehousedDate DateTime?
@@ -168,11 +169,11 @@ enum UserRole {
   
 //   // Relations
 //   rmOrder      RawMaterialOrder    @relation(fields: [rmOrderId], references: [id])
-//   rmOrderId    BigInt
+//   rmOrderId    String
 //   production   Production @relation(fields: [productionId], references: [id])
-//   productionId BigInt
+//   productionId String
 //   image_rel    Image?     @relation(fields: [imageId], references: [id])
-//   imageId      BigInt?
+//   imageId      String?
   
 //   @@map("order_data")
 // }
@@ -190,7 +191,7 @@ enum UserRole {
 // // ================================
 
 // model Production {
-//   id         BigInt           @id @default(autoincrement())
+//   id         String           @id @default(autoincrement())
 //   status     ProductionStatus @default(PENDING)
 //   batchCode  String           @unique
 //   startTime  DateTime?
@@ -203,9 +204,9 @@ enum UserRole {
   
 //   // Relations
 //   user      User        @relation(fields: [userId], references: [id])
-//   userId    BigInt
+//   userId    String
 //   lane      Lane?       @relation(fields: [laneId], references: [id])
-//   laneId    BigInt?
+//   laneId    String?
 //   orderData OrderData[]
 //   packets   Packet[]
   
@@ -213,7 +214,7 @@ enum UserRole {
 // }
 
 // model Lane {
-//   id       BigInt @id @default(autoincrement())
+//   id       String @id @default(autoincrement())
 //   name     String
 //   metaData Json?
   
@@ -235,9 +236,9 @@ enum UserRole {
 // // ================================
 
 // model Chamber {
-//   id        BigInt      @id @default(autoincrement())
+//   id        String      @id @default(autoincrement())
 //   name      String
-//   createdBy BigInt
+//   createdBy String
 //   capacity  Int
 //   type      ChamberType @default(COLD_STORAGE)
 //   createdAt DateTime    @default(now())
@@ -250,16 +251,16 @@ enum UserRole {
 // }
 
 // model ChamberStock {
-//   id       BigInt @id @default(autoincrement())
+//   id       String @id @default(autoincrement())
 //   category String
 //   rating   Int    @db.SmallInt @default(5)
 //   quantity Int
   
 //   // Relations
 //   rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
-//   rawMaterialId BigInt
+//   rawMaterialId String
 //   chamber       Chamber     @relation(fields: [chamberId], references: [id])
-//   chamberId     BigInt
+//   chamberId     String
 //   // for create bidirectional relation
 //   orderProducts OrderProduct[]
   
@@ -278,7 +279,7 @@ enum UserRole {
 // // ================================
 
 // model Packaging {
-//   id          BigInt @id @default(autoincrement())
+//   id          String @id @default(autoincrement())
 //   size        String // e.g., "35KG", "86KG"
 //   quantity    Int
 //   unit        String @default("KG")
@@ -292,25 +293,25 @@ enum UserRole {
 // }
 
 // model Product {
-//   id          BigInt @id @default(autoincrement())
+//   id          String @id @default(autoincrement())
 //   productName String
   
 //   // Relations
 //   packaging   Packaging @relation(fields: [packetId], references: [id])
-//   packetId    BigInt
+//   packetId    String
   
 //   @@map("products")
 // }
 
 // model Packet {
-//   id       BigInt @id @default(autoincrement())
+//   id       String @id @default(autoincrement())
 //   size     String
 //   quantity Int
 //   unit     String @default("KG")
   
 //   // Relations
 //   production   Production @relation(fields: [productionId], references: [id])
-//   productionId BigInt
+//   productionId String
   
 //   @@map("packets")
 // }
@@ -320,7 +321,7 @@ enum UserRole {
 // // ================================
 
 // model DispatchOrder {
-//   id                BigInt      @id @default(autoincrement())
+//   id                String      @id @default(autoincrement())
 //   customerName      String
 //   address           String
 //   postalCode        String
@@ -339,25 +340,25 @@ enum UserRole {
   
 //   // Relations
 //   truckDetail   TruckDetail? @relation(fields: [truckDetailId], references: [id])
-//   truckDetailId BigInt?
+//   truckDetailId String?
 //   packaging     Packaging?   @relation(fields: [packagingId], references: [id])
-//   packagingId   BigInt?
+//   packagingId   String?
 //   orderProducts OrderProduct[]
   
 //   @@map("dispatch_orders")
 // }
 
 // model OrderProduct {
-//   id       BigInt @id @default(autoincrement())
+//   id       String @id @default(autoincrement())
 //   quantity Int
   
 //   // Relations
 //   chamber         Chamber       @relation(fields: [chamberId], references: [id])
-//   chamberId       BigInt
+//   chamberId       String
 //   chamberStock    ChamberStock  @relation(fields: [chamberStockId], references: [id])
-//   chamberStockId  BigInt
+//   chamberStockId  String
 //   dispatchOrder   DispatchOrder @relation(fields: [dispatchOrderId], references: [id])
-//   dispatchOrderId BigInt
+//   dispatchOrderId String
   
 //   @@map("order_products")
 // }
@@ -367,7 +368,7 @@ enum UserRole {
 // // ================================
 
 // model TruckDetail {
-//   id       BigInt      @id @default(autoincrement())
+//   id       String      @id @default(autoincrement())
 //   number   String      @unique
 //   name     String
 //   type     TruckType   @default(REFRIGERATED)
@@ -379,13 +380,13 @@ enum UserRole {
 //   rmOrders       RawMaterialOrder[]
 //   dispatchOrders DispatchOrder[]
 //   challan        Challan?        @relation(fields: [challanId], references: [id])
-//   challanId      BigInt?
+//   challanId      String?
   
 //   @@map("truck_details")
 // }
 
 // model Challan {
-//   id        BigInt  @id @default(autoincrement())
+//   id        String  @id @default(autoincrement())
 //   tareWeight Decimal @db.Decimal(8, 2)
 //   netWeight Decimal @db.Decimal(8, 2)
 //   image     String?
@@ -415,7 +416,7 @@ enum UserRole {
 // // ================================
 
 // model Image {
-//   id  BigInt @id @default(autoincrement())
+//   id  String @id @default(autoincrement())
 //   url String
   
 //   // Relations
@@ -429,9 +430,9 @@ enum UserRole {
 // // ================================
 
 // model StockMovement {
-//   id        BigInt            @id @default(autoincrement())
-//   productId BigInt?
-//   chamberId BigInt
+//   id        String            @id @default(autoincrement())
+//   productId String?
+//   chamberId String
 //   qty       Int
 //   direction StockDirection
 //   reason    String?

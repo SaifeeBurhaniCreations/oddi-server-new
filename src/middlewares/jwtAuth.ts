@@ -1,13 +1,4 @@
 import { jwtAuth } from '../sbc/utils/jwt-auth/jwt-auth.js';
-import { env } from '../config/env.js';
+import { JWT_CONFIG } from "../constants/jwtAuth.js"
 
-export const userJwtAuth = jwtAuth({
-  publicKey: env.JWT_PUBLIC_KEY,
-  privateKey: env.JWT_PRIVATE_KEY, 
-  algorithms: ['ES256'],
-  headerName: 'Authorization',
-  scheme: 'Bearer',
-  issuer: 'https://auth.sbcws.com',
-  audience: 'oddiville-user-api',
-  expiresIn: '12h',
-});
+export const userJwtAuth = jwtAuth(JWT_CONFIG);

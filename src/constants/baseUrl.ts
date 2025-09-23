@@ -1,1 +1,1 @@
-export const USER_BASE_URL = "/api/user";
+export const USER_BASE_URL = "/api/users";
